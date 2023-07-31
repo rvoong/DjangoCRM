@@ -1,12 +1,29 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+from .forms import SignUpForm
 
 # Create your views here.
 
 
 def home(request):
-    return render(request, 'home.html', {})
+    # Check to see if logging in
+    if request.method == 'POST':
+        # do something
+        username = request.POST['username']
+        password = request.POST['password']
+    # Authenticate
+        user = authenticate(request, username=username, password=password)
+
+        if user:
+            login(request, user)
+            messages.success(request, "You have been logged in")
+            return redirect('home')
+        else:
+            messages.success(request, "Error logging in")
+            return redirect('home')
+    else:
+        return render(request, 'home.html', {})
 
 
 def login_user(request):
@@ -14,4 +31,23 @@ def login_user(request):
 
 
 def logout_user(request):
-    pass
+    logout(request)
+    messages.success(request, "You have been Logged Out")
+    return redirect('home')
+
+def register_user(request):
+    ## only occurs if they are posting the SignUpForm
+    if request.method == 'POST':
+        form = SignUpForm(request.POST)
+        if form.is_valid(): 
+            form.save()
+            #Authenticate and login 
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password1'] 
+            user = authenticate(username-username, password=password)
+            login(request,user)
+            messages.success(request, "You have Sucessfully Registered")
+            return redirect('home')
+    else: 
+        form = SignUpForm()
+        return render(request, 'register.html', {'form':form})
